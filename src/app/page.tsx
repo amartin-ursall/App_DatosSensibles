@@ -129,7 +129,7 @@ export default function PrivacyPalPage() {
         </Sidebar>
         <SidebarInset className="bg-background">
           <AppHeader />
-          <main className="flex-1 px-4 sm:px-6 pb-8">
+          <main className="flex flex-1 flex-col items-center justify-center p-4 sm:p-6 pb-8">
             {!file ? (
               <FileUploader
                 onFileDrop={handleFileProcess}
