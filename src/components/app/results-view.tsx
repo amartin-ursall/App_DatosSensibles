@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RotateCcw, FileDigit } from "lucide-react";
+import { Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +13,9 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTypeIcon } from "./icons";
 import { Skeleton } from "../ui/skeleton";
+import { useEffect, useState } from "react";
+import { FileDigit } from "lucide-react";
+
 
 interface ResultsViewProps {
   originalContent: string | null;
@@ -55,18 +58,40 @@ export function ResultsView({
   onReset,
   isLoading,
 }: ResultsViewProps) {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (redactedContent instanceof Blob && fileType === "application/pdf") {
+      const url = URL.createObjectURL(redactedContent);
+      setPdfUrl(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+        setPdfUrl(null);
+      };
+    }
+  }, [redactedContent, fileType]);
+
   const handleDownload = () => {
     if (!redactedContent) return;
-
-    const url = URL.createObjectURL(redactedContent as Blob);
+    const url =
+      pdfUrl ||
+      URL.createObjectURL(
+        redactedContent instanceof Blob
+          ? redactedContent
+          : new Blob([redactedContent])
+      );
     const a = document.createElement("a");
     a.href = url;
     a.download = `redacted-${fileName}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (!pdfUrl) {
+      URL.revokeObjectURL(url);
+    }
   };
+
 
   if (isLoading) {
     return <LoadingState />;
@@ -89,10 +114,16 @@ export function ResultsView({
             </p>
           </div>
         </div>
+        <div className="flex gap-2">
+        <Button onClick={handleDownload} variant="secondary">
+            <Download className="mr-2 h-4 w-4" />
+            Download
+          </Button>
         <Button onClick={onReset} variant="outline">
           <RotateCcw className="mr-2 h-4 w-4" />
           Process Another File
         </Button>
+        </div>
       </div>
 
       <div
@@ -105,25 +136,24 @@ export function ResultsView({
         {isPdf ? (
           <Card>
             <CardHeader>
-              <CardTitle>PDF Redacted</CardTitle>
+              <CardTitle>Redacted PDF Preview</CardTitle>
               <CardDescription>
                 Sensitive content in your PDF has been blacked out.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center p-8 bg-secondary rounded-lg text-center">
-                <FileDigit className="w-16 h-16 text-primary mb-4" />
-                <p className="text-lg font-medium">
-                  Your redacted PDF is ready.
-                </p>
-                <p className="text-muted-foreground mb-6">
-                  Click the button below to download it.
-                </p>
-                <Button onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Redacted PDF
-                </Button>
-              </div>
+                {pdfUrl ? (
+                  <iframe
+                    src={pdfUrl}
+                    className="w-full h-[600px] rounded-md border"
+                    title="Redacted PDF Preview"
+                  ></iframe>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 bg-secondary rounded-lg text-center h-[600px]">
+                     <FileDigit className="w-16 h-16 text-primary mb-4" />
+                     <p className="text-lg font-medium">Generating PDF preview...</p>
+                  </div>
+                )}
             </CardContent>
           </Card>
         ) : (
