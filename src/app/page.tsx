@@ -66,11 +66,12 @@ export default function PrivacyPalPage() {
 
       setIsLoading(true);
       setFile(uploadedFile);
+      setOriginalContent(null);
+      setRedactedContent(null);
 
       try {
         if (uploadedFile.type === "application/pdf") {
-          setOriginalContent(null); // No text preview for PDFs
-          const redactedPdfBlob = redactPdf(uploadedFile, rules);
+          const redactedPdfBlob = await redactPdf(uploadedFile, rules);
           setRedactedContent(redactedPdfBlob);
         } else {
           const text = await uploadedFile.text();
@@ -83,7 +84,7 @@ export default function PrivacyPalPage() {
         toast({
           variant: "destructive",
           title: "Processing Error",
-          description: "There was an error processing your file.",
+          description: "There was an error processing your file. The PDF might be malformed or encrypted.",
         });
         handleReset();
       } finally {
