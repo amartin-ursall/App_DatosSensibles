@@ -79,6 +79,10 @@ export default function PrivacyPalPage() {
           const redactedText = redactText(text, rules, strategy);
           setRedactedContent(redactedText);
         }
+        toast({
+          title: "File processed",
+          description: "Your file has been redacted successfully.",
+        });
       } catch (error) {
         console.error("Error processing file:", error);
         toast({
