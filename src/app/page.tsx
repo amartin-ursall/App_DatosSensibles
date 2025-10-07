@@ -56,10 +56,10 @@ export default function PrivacyPalPage() {
       ) {
         toast({
           variant: "destructive",
-          title: "Unsupported File Type",
-          description: `Sorry, we do not support "${
-            uploadedFile.name.split(".").pop() || "unknown"
-          }" files.`,
+          title: "Tipo de Archivo no Soportado",
+          description: `Lo sentimos, no soportamos archivos de tipo "${
+            uploadedFile.name.split(".").pop() || "desconocido"
+          }".`,
         });
         return;
       }
@@ -80,15 +80,15 @@ export default function PrivacyPalPage() {
           setRedactedContent(redactedText);
         }
         toast({
-          title: "File processed",
-          description: "Your file has been redacted successfully.",
+          title: "Archivo procesado",
+          description: "Tu archivo ha sido redactado exitosamente.",
         });
       } catch (error) {
         console.error("Error processing file:", error);
         toast({
           variant: "destructive",
-          title: "Processing Error",
-          description: "There was an error processing your file. The PDF might be malformed or encrypted.",
+          title: "Error de Procesamiento",
+          description: "Hubo un error al procesar tu archivo. El PDF podría estar malformado o encriptado.",
         });
         handleReset();
       } finally {
@@ -111,7 +111,7 @@ export default function PrivacyPalPage() {
         <Sidebar collapsible="icon" className="p-0">
           <SidebarHeader className="p-4 border-b">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-lg">Settings</h2>
+              <h2 className="font-semibold text-lg">Ajustes</h2>
               <div className="md:hidden">
                 <SidebarTrigger />
               </div>

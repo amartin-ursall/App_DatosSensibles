@@ -82,7 +82,7 @@ export function ResultsView({
       );
     const a = document.createElement("a");
     a.href = url;
-    a.download = `redacted-${fileName}`;
+    a.download = `redactado-${fileName}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -109,18 +109,18 @@ export function ResultsView({
           <div>
             <h2 className="text-xl font-semibold">{fileName}</h2>
             <p className="text-sm text-muted-foreground">
-              Redaction complete.
+              Redacción completa.
             </p>
           </div>
         </div>
         <div className="flex gap-2">
         <Button onClick={handleDownload} variant="secondary">
             <Download className="mr-2 h-4 w-4" />
-            Download
+            Descargar
           </Button>
         <Button onClick={onReset} variant="outline">
           <RotateCcw className="mr-2 h-4 w-4" />
-          Process Another File
+          Procesar Otro Archivo
         </Button>
         </div>
       </div>
@@ -135,9 +135,9 @@ export function ResultsView({
         {isPdf ? (
           <Card>
             <CardHeader>
-              <CardTitle>Redacted PDF Preview</CardTitle>
+              <CardTitle>Vista Previa del PDF Redactado</CardTitle>
               <CardDescription>
-                Sensitive content in your PDF has been blacked out.
+                El contenido sensible de tu PDF ha sido ocultado.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -145,12 +145,12 @@ export function ResultsView({
                   <iframe
                     src={pdfUrl}
                     className="w-full h-[600px] rounded-md border"
-                    title="Redacted PDF Preview"
+                    title="Vista Previa del PDF Redactado"
                   ></iframe>
                 ) : (
                   <div className="flex flex-col items-center justify-center p-8 bg-secondary rounded-lg text-center h-[600px]">
                      <FileDigit className="w-16 h-16 text-primary mb-4" />
-                     <p className="text-lg font-medium">Generating PDF preview...</p>
+                     <p className="text-lg font-medium">Generando vista previa del PDF...</p>
                   </div>
                 )}
             </CardContent>
@@ -172,7 +172,7 @@ export function ResultsView({
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Redacted</CardTitle>
+                <CardTitle>Redactado</CardTitle>
               </CardHeader>
               <Separator />
               <CardContent className="p-0">

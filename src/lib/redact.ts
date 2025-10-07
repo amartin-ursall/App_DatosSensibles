@@ -1,4 +1,3 @@
-
 import { RedactionRules, RedactionStrategy } from "./types";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
@@ -146,14 +145,14 @@ export const redactPdf = async (
         height: 20,
         color: rgb(0,0,0)
     });
-    firstPage.drawText("NOTE: This is a sample redaction.", {
+    firstPage.drawText("NOTA: Esta es una redacción de muestra.", {
         x: 50,
         y: height - 120,
         size: 12,
         font,
         color: rgb(1,0,0)
     })
-    firstPage.drawText("pdf-lib cannot accurately locate text for redaction.", {
+    firstPage.drawText("pdf-lib no puede localizar texto con precisión para la redacción.", {
         x: 50,
         y: height - 135,
         size: 10,

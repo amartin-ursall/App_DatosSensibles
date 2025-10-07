@@ -28,29 +28,29 @@ interface RedactionSettingsProps {
 export const ALL_RULES: RedactionRule[] = [
   {
     id: "creditCard",
-    name: "Credit Card Numbers",
-    description: "Detects and redacts credit card numbers.",
+    name: "Números de Tarjeta de Crédito",
+    description: "Detecta y redacta números de tarjetas de crédito.",
   },
   {
     id: "email",
-    name: "Email Addresses",
-    description: "Detects and redacts email addresses.",
+    name: "Direcciones de Correo Electrónico",
+    description: "Detecta y redacta direcciones de correo electrónico.",
   },
   {
     id: "phone",
-    name: "Phone Numbers",
-    description: "Detects and redacts phone numbers.",
+    name: "Números de Teléfono",
+    description: "Detecta y redacta números de teléfono.",
   },
   {
     id: "name",
-    name: "Names",
+    name: "Nombres",
     description:
-      "Detects and redacts common names (e.g., John Doe).",
+      "Detecta y redacta nombres comunes (p. ej., Juan Pérez).",
   },
   {
     id: "ipAddress",
-    name: "IP Addresses",
-    description: "Detects and redacts IPv4 and IPv6 addresses.",
+    name: "Direcciones IP",
+    description: "Detecta y redacta direcciones IPv4 e IPv6.",
   },
 ];
 
@@ -64,7 +64,7 @@ export function RedactionSettings({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h3 className="font-medium text-lg">Redaction Rules</h3>
+        <h3 className="font-medium text-lg">Reglas de Redacción</h3>
         <div className="space-y-3">
           {ALL_RULES.map((rule) => (
             <div
@@ -92,9 +92,9 @@ export function RedactionSettings({
       <Separator />
 
       <div className="space-y-4">
-        <h3 className="font-medium text-lg">Text Redaction Strategy</h3>
+        <h3 className="font-medium text-lg">Estrategia de Redacción de Texto</h3>
         <p className="text-sm text-muted-foreground">
-          Choose how to replace sensitive text. This does not apply to PDFs.
+          Elige cómo reemplazar el texto sensible. Esto no se aplica a los PDF.
         </p>
         <RadioGroup
           value={strategy}
@@ -103,17 +103,17 @@ export function RedactionSettings({
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="redact" id="redact" />
-            <Label htmlFor="redact">Tokenize</Label>
+            <Label htmlFor="redact">Tokenizar</Label>
           </div>
           <p className="text-xs text-muted-foreground pl-6">
-            Replace with a token, e.g., "[EMAIL]".
+            Reemplazar con un token, ej., "[EMAIL]".
           </p>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="mask" id="mask" />
-            <Label htmlFor="mask">Mask</Label>
+            <Label htmlFor="mask">Enmascarar</Label>
           </div>
           <p className="text-xs text-muted-foreground pl-6">
-            Replace with 'x' to preserve length.
+            Reemplazar con 'x' para conservar la longitud.
           </p>
         </RadioGroup>
       </div>

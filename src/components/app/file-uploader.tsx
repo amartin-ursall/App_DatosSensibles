@@ -94,10 +94,10 @@ export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
               <UploadCloud className="w-10 h-10 text-primary" />
             </div>
             <h3 className="text-xl font-semibold mb-2">
-              Drag & drop files here
+              Arrastra y suelta archivos aquí
             </h3>
             <p className="text-muted-foreground mb-4">
-              or click to upload a file
+              o haz clic para subir un archivo
             </p>
             <input
               id="file-input"
@@ -107,10 +107,10 @@ export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
               accept={supportedFileTypes.join(",")}
             />
             <Button onClick={triggerFileInput} disabled={isLoading}>
-              Browse Files
+              Buscar Archivos
             </Button>
             <p className="text-xs text-muted-foreground mt-4">
-              Supported file types: .txt, .csv, .md, .json, .log, .pdf
+              Tipos de archivo soportados: .txt, .csv, .md, .json, .log, .pdf
             </p>
           </div>
         </CardContent>
@@ -119,7 +119,7 @@ export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
         <div className="mt-4">
           <Progress value={uploadProgress} className="w-full" />
           <p className="text-sm text-center mt-2 text-muted-foreground animate-pulse">
-            Processing your file...
+            Procesando tu archivo...
           </p>
         </div>
       )}
