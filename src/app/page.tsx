@@ -40,7 +40,7 @@ export default function PrivacyPalPage() {
   const [strategy, setStrategy] = useState<RedactionStrategy>("redact");
 
   const handleRuleChange = (ruleId: keyof RedactionRules, enabled: boolean) => {
-    setRules((prev) => ({ ...prev, [ruleId]: enabled }));
+    setRules((prev) => ({ ...prev, [rule.id]: enabled }));
   };
 
   const handleFileProcess = useCallback(
@@ -129,7 +129,7 @@ export default function PrivacyPalPage() {
         </Sidebar>
         <SidebarInset className="bg-background">
           <AppHeader />
-          <main className="flex flex-1 flex-col justify-center items-center p-4 sm:p-6 pb-8">
+          <main className="flex flex-1 flex-col items-center p-4 sm:p-6 pb-8">
             <div className="w-full max-w-7xl mx-auto">
               {!file ? (
                 <FileUploader
