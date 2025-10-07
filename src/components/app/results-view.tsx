@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RotateCcw } from "lucide-react";
+import { Download, RotateCcw, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +14,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTypeIcon } from "./icons";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
-import { FileDigit } from "lucide-react";
 
 
 interface ResultsViewProps {
