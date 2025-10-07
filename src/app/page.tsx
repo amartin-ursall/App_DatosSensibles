@@ -129,22 +129,24 @@ export default function PrivacyPalPage() {
         </Sidebar>
         <SidebarInset className="bg-background">
           <AppHeader />
-          <main className="flex flex-1 flex-col items-center justify-center p-4 sm:p-6 pb-8">
-            {!file ? (
-              <FileUploader
-                onFileDrop={handleFileProcess}
-                isLoading={isLoading}
-              />
-            ) : (
-              <ResultsView
-                originalContent={originalContent}
-                redactedContent={redactedContent}
-                fileName={file.name}
-                fileType={file.type}
-                onReset={handleReset}
-                isLoading={isLoading}
-              />
-            )}
+          <main className="flex flex-1 flex-col justify-center items-center p-4 sm:p-6 pb-8">
+            <div className="w-full max-w-7xl mx-auto">
+              {!file ? (
+                <FileUploader
+                  onFileDrop={handleFileProcess}
+                  isLoading={isLoading}
+                />
+              ) : (
+                <ResultsView
+                  originalContent={originalContent}
+                  redactedContent={redactedContent}
+                  fileName={file.name}
+                  fileType={file.type}
+                  onReset={handleReset}
+                  isLoading={isLoading}
+                />
+              )}
+            </div>
           </main>
         </SidebarInset>
       </div>
