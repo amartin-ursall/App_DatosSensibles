@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pal de Privacidad",
+  title: "Aplicacion de Privacidad",
   description: "Redacta información sensible de tus archivos con facilidad.",
 };
 
