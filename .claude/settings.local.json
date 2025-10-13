@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npx next:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:production:*)",
+      "Bash(py --version)",
+      "Bash(py -m venv:*)",
+      "Bash(venvScriptspip install -r requirements.txt)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(timeout 5 curl -s http://localhost:5000/health)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

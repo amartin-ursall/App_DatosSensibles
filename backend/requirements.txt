@@ -1,0 +1,9 @@
+PyMuPDF
+pdfplumber
+regex
+python-stdnum
+ftfy
+rapidfuzz
+flask
+flask-cors
+python-dotenv

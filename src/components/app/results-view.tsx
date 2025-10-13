@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RotateCcw, FileDigit } from "lucide-react";
+import { Download, RotateCcw, FileDigit, ShieldCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,51 +9,108 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTypeIcon } from "./icons";
-import { Skeleton } from "../ui/skeleton";
+import { LoadingAnimation } from "./loading-animation";
 import { useEffect, useState } from "react";
 
 
 interface ResultsViewProps {
   originalContent: string | null;
   redactedContent: string | Blob | null;
+  detectionStats: { total: number; byType: Record<string, number> } | null;
   fileName: string;
   fileType: string;
+  strategy: string;
   onReset: () => void;
   isLoading: boolean;
 }
 
-const LoadingState = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-8 w-1/3" />
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-1/4" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-48 w-full" />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-1/4" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-48 w-full" />
-        </CardContent>
-      </Card>
-    </div>
-  </div>
+const LoadingState = ({ fileName, fileType }: { fileName: string; fileType: string }) => (
+  <LoadingAnimation fileName={fileName} fileType={fileType} />
 );
+
+const getTypeLabel = (type: string): string => {
+  const typeLabels: Record<string, string> = {
+    // Financieros
+    creditCard: "Tarjetas de Crédito/Débito",
+    iban: "IBAN",
+
+    // Identificación oficial
+    dni: "DNI Español",
+    nie: "NIE Español",
+    cif: "CIF Español",
+    ssn: "SSN (Seguro Social USA)",
+    passport: "Pasaportes",
+
+    // Contacto
+    email: "Correos Electrónicos",
+    phone: "Teléfonos",
+    address: "Direcciones Postales",
+
+    // Fechas y nombres
+    dateOfBirth: "Fechas de Nacimiento",
+    fullName: "Nombres Completos",
+    accountHolder: "Titulares de Cuenta",
+
+    // Usuario y sesión
+    username: "Usuarios/Alias",
+    cookie: "Cookies/Sesiones",
+
+    // Vehículos
+    licensePlate: "Matrículas",
+
+    // Crítico
+    credentials: "Credenciales (CRÍTICO)",
+    healthData: "Datos de Salud (CRÍTICO)",
+
+    // Otros (legacy)
+    license: "Licencias",
+    postalAddress: "Direcciones",
+    vehiclePlate: "Matrículas",
+    ipAddress: "Direcciones IP",
+    name: "Nombres",
+    rfc: "RFC",
+    rut: "RUT",
+    cuit: "CUIT/CUIL",
+    curp: "CURP",
+  };
+  return typeLabels[type] || type.toUpperCase();
+};
+
+// Función para renderizar texto con redacción (negro sólido)
+const renderTextWithRedaction = (text: string) => {
+  // Buscar patrones de subrayado __texto__
+  const parts = text.split(/(__.+?__)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('__') && part.endsWith('__')) {
+      // Es texto redactado, remover los __ y aplicar estilo negro sólido
+      const redactedText = part.slice(2, -2);
+      return (
+        <span
+          key={index}
+          className="bg-black text-black px-1 rounded select-none"
+          title="Dato sensible redactado"
+        >
+          {redactedText}
+        </span>
+      );
+    }
+    // Es texto normal
+    return part;
+  });
+};
 
 export function ResultsView({
   originalContent,
   redactedContent,
+  detectionStats,
   fileName,
   fileType,
+  strategy,
   onReset,
   isLoading,
 }: ResultsViewProps) {
@@ -93,7 +150,7 @@ export function ResultsView({
 
 
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState fileName={fileName} fileType={fileType} />;
   }
 
   const isPdf = fileType === "application/pdf";
@@ -109,7 +166,7 @@ export function ResultsView({
           <div>
             <h2 className="text-xl font-semibold">{fileName}</h2>
             <p className="text-sm text-muted-foreground">
-              Redacción completa.
+              Análisis completo - datos sensibles completamente redactados (bloques negros).
             </p>
           </div>
         </div>
@@ -125,6 +182,46 @@ export function ResultsView({
         </div>
       </div>
 
+      {/* Estadísticas de detección */}
+      {detectionStats && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-blue-500" />
+                <CardTitle>Estadísticas de Detección</CardTitle>
+              </div>
+              <Badge variant={detectionStats.total > 0 ? "destructive" : "default"} className="text-lg px-4 py-1">
+                {detectionStats.total} dato{detectionStats.total !== 1 ? "s" : ""} sensible{detectionStats.total !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+            <CardDescription>
+              {detectionStats.total > 0
+                ? "Se detectaron y redactaron (bloques negros) los siguientes tipos de datos sensibles:"
+                : "No se detectaron datos sensibles en este archivo."}
+            </CardDescription>
+          </CardHeader>
+          {detectionStats.total > 0 && (
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {Object.entries(detectionStats.byType)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([type, count]) => (
+                    <div
+                      key={type}
+                      className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg"
+                    >
+                      <AlertCircle className="h-4 w-4 text-destructive" />
+                      <span className="font-medium">{getTypeLabel(type)}:</span>
+                      <Badge variant="secondary">{count}</Badge>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
       <div
         className={
           isPdf
@@ -137,7 +234,7 @@ export function ResultsView({
             <CardHeader>
               <CardTitle>Vista Previa del PDF Redactado</CardTitle>
               <CardDescription>
-                El contenido sensible de tu PDF ha sido ocultado.
+                Los datos sensibles de tu PDF han sido completamente ocultados con bloques negros sólidos.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -172,13 +269,16 @@ export function ResultsView({
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Redactado</CardTitle>
+                <CardTitle>Con Redacción (Negro Sólido)</CardTitle>
+                <CardDescription>
+                  Los datos sensibles están completamente ocultos con bloques negros
+                </CardDescription>
               </CardHeader>
               <Separator />
               <CardContent className="p-0">
                 <ScrollArea className="h-96">
                   <pre className="p-4 font-code text-sm whitespace-pre-wrap break-all">
-                    <code>{redactedContent as string}</code>
+                    <code>{renderTextWithRedaction(redactedContent as string)}</code>
                   </pre>
                 </ScrollArea>
               </CardContent>

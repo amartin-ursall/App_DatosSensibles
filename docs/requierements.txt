@@ -1,0 +1,7 @@
+pymupdf
+pdfplumber
+ocrmypdf
+regex
+python-stdnum
+ftfy
+rapidfuzz

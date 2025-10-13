@@ -1,12 +1,18 @@
 export type RedactionRuleInfo = {
-  id: "creditCard" | "email" | "phone" | "name" | "ipAddress";
+  id: "creditCard" | "email" | "phone" | "dni" | "nie" | "cif" | "ssn" | "iban" | "passport" | "licensePlate" | "address" | "dateOfBirth" | "username" | "fullName" | "accountHolder" | "cookie" | "credentials" | "healthData" | "employeeId";
   name: string;
   description: string;
 };
 
+export type RedactionRule = RedactionRuleInfo;
+
 export type RedactionRules = Record<RedactionRuleInfo["id"], boolean>;
 
-export type RedactionStrategy = "mask" | "redact";
+export type RedactionStrategy = "underline";
+
+export type SensitivityLevel = "strict" | "normal" | "relaxed";
+
+// Tipos de detección AI/TS eliminados del frontend
 
 export const supportedMimeTypes = [
   "text/plain",
