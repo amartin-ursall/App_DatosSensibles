@@ -8,7 +8,6 @@ import {
   SidebarHeader,
   SidebarContent,
 } from "@/components/ui/sidebar";
-import { AppHeader } from "@/components/app/app-header";
 import {
   RedactionRules,
   RedactionStrategy,
@@ -197,7 +196,6 @@ export default function PrivacyPalPage() {
           </SidebarContent>
         </Sidebar>
         <SidebarInset className="bg-background">
-          <AppHeader />
           <main className="flex flex-1 flex-col items-center p-4 sm:p-6 pb-8">
             <div className="w-full max-w-7xl mx-auto">
               {!file ? (
