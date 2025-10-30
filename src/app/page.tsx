@@ -105,7 +105,7 @@ export default function PrivacyPalPage() {
           formData.append('action', 'highlight'); // Siempre subrayar
 
           // Usar backend Python (puerto 5000)
-          const response = await fetch('http://localhost:5000/api/process-pdf', {
+          const response = await fetch('http://192.168.0.98:5000/api/process-pdf', {
             method: 'POST',
             body: formData,
           });
@@ -133,7 +133,7 @@ export default function PrivacyPalPage() {
           setOriginalContent(text);
 
           // Usar backend Python para detección en texto
-          const response = await fetch('http://localhost:5000/api/detect-text', {
+          const response = await fetch('http://192.168.0.98:5000/api/detect-text', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

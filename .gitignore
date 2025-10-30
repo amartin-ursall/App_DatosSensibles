@@ -43,3 +43,14 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# PM2 logs and runtime
+logs/
+.pm2/
+*.log
+
+# Python
+backend/venv/
+backend/__pycache__/
+*.pyc
+*.pyo
