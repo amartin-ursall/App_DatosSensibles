@@ -125,6 +125,73 @@ export const ALL_RULES: RedactionRule[] = [
     name: "Datos de Salud (CRÍTICO)",
     description: "Detecta diagnósticos, medicación, historias clínicas.",
   },
+
+  // ===== CAMPOS ESPECÍFICOS DE SEGUROS Y JURÍDICO =====
+  {
+    id: "numeroFactura",
+    name: "Número de Factura",
+    description: "Detecta números de factura, recibo o invoice (ORD./25/673, Invoice No: 12345, etc.).",
+  },
+  {
+    id: "tomador",
+    name: "Tomador del Seguro",
+    description: "Detecta el nombre del tomador o contratante de la póliza.",
+  },
+  {
+    id: "numeroPoliza",
+    name: "Número de Póliza",
+    description: "Detecta números de póliza en múltiples formatos (ABC-123456, POL-78901, etc.).",
+  },
+  {
+    id: "domicilio",
+    name: "Domicilio / Dirección Completa",
+    description: "Detecta domicilios sociales y direcciones completas con contexto.",
+  },
+  {
+    id: "codigoPostal",
+    name: "Código Postal (CP)",
+    description: "Detecta códigos postales españoles (5 dígitos).",
+  },
+  {
+    id: "asegurado",
+    name: "Asegurado / Beneficiario",
+    description: "Detecta el nombre del asegurado o beneficiario de la póliza.",
+  },
+  {
+    id: "fechaEfecto",
+    name: "Fecha de Efecto / Vigencia",
+    description: "Detecta fechas de inicio y fin de vigencia del seguro.",
+  },
+  {
+    id: "primaSeguro",
+    name: "Prima / Importe del Seguro",
+    description: "Detecta importes, primas, cuotas y pagos de seguros.",
+  },
+  {
+    id: "mediador",
+    name: "Mediador / Corredor / Agente",
+    description: "Detecta el nombre del mediador, corredor o agente de seguros.",
+  },
+  {
+    id: "siniestro",
+    name: "Número de Siniestro",
+    description: "Detecta números de siniestro, reclamaciones e incidentes.",
+  },
+  {
+    id: "nifAseguradora",
+    name: "NIF/CIF Aseguradora",
+    description: "Detecta el NIF o CIF de la empresa aseguradora.",
+  },
+  {
+    id: "cuentaDomiciliacion",
+    name: "Cuenta de Domiciliación",
+    description: "Detecta cuentas IBAN para domiciliación de pagos y recibos.",
+  },
+  {
+    id: "matriculaAsegurada",
+    name: "Matrícula del Vehículo Asegurado",
+    description: "Detecta matrículas de vehículos en el contexto de seguros.",
+  },
 ];
 
 export function RedactionSettings({

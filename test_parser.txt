@@ -1,0 +1,17 @@
+DOCUMENTO DE PRUEBA PARA EL PARSER
+
+Nombre: Juan Pérez García
+DNI: 12345678A
+Teléfono: 666555444
+Email: juan.perez@example.com
+
+Dirección:
+Calle Mayor 123
+28001 Madrid
+
+Número de cuenta: ES12 1234 5678 9012 3456 7890
+
+Este es un documento de prueba para verificar el funcionamiento del parser externo.
+Contiene varios datos sensibles que deberían ser detectados por el sistema.
+
+Fecha: 05/11/2025

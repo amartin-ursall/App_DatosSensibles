@@ -41,3 +41,14 @@ export const fileTypeExtensions: { [key: string]: string } = {
   "application/pdf": "pdf",
   "application/log": "log", // Custom for .log
 };
+
+export interface ProcessingProgress {
+  stage: string;
+  percent: number;
+  currentPage?: number;
+  totalPages?: number;
+  extractionMethod?: string;
+  message?: string;
+  done?: boolean;
+  updatedAt?: number;
+}

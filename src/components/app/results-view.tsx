@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTypeIcon } from "./icons";
 import { LoadingAnimation } from "./loading-animation";
 import { useEffect, useState } from "react";
+import type { ProcessingProgress } from "@/lib/types";
 
 
 interface ResultsViewProps {
@@ -23,13 +24,34 @@ interface ResultsViewProps {
   detectionStats: { total: number; byType: Record<string, number> } | null;
   fileName: string;
   fileType: string;
+  fileSize: number;
   strategy: string;
+  extractionMode: "parser" | "ocr" | null;
+  progressData: ProcessingProgress | null;
   onReset: () => void;
   isLoading: boolean;
 }
 
-const LoadingState = ({ fileName, fileType }: { fileName: string; fileType: string }) => (
-  <LoadingAnimation fileName={fileName} fileType={fileType} />
+const LoadingState = ({
+  fileName,
+  fileType,
+  fileSize,
+  extractionMode,
+  progressData,
+}: {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  extractionMode: "parser" | "ocr" | null;
+  progressData: ProcessingProgress | null;
+}) => (
+  <LoadingAnimation
+    fileName={fileName}
+    fileType={fileType}
+    extractionMode={extractionMode}
+    fileSize={fileSize}
+    progressData={progressData}
+  />
 );
 
 const getTypeLabel = (type: string): string => {
@@ -110,7 +132,10 @@ export function ResultsView({
   detectionStats,
   fileName,
   fileType,
+  fileSize,
   strategy,
+  extractionMode,
+  progressData,
   onReset,
   isLoading,
 }: ResultsViewProps) {
@@ -118,13 +143,25 @@ export function ResultsView({
 
   useEffect(() => {
     if (redactedContent instanceof Blob && fileType === "application/pdf") {
+      console.log("[PREVIEW] Generando URL del blob PDF para previsualización");
+      console.log("[PREVIEW] Tamaño del blob:", redactedContent.size, "bytes");
+      console.log("[PREVIEW] Tipo del blob:", redactedContent.type);
+
       const url = URL.createObjectURL(redactedContent);
+      console.log("[PREVIEW] URL generada:", url);
       setPdfUrl(url);
 
       return () => {
+        console.log("[PREVIEW] Limpiando URL del objeto");
         URL.revokeObjectURL(url);
         setPdfUrl(null);
       };
+    } else {
+      console.log("[PREVIEW] No se generó URL:", {
+        isBlob: redactedContent instanceof Blob,
+        fileType,
+        contentType: typeof redactedContent
+      });
     }
   }, [redactedContent, fileType]);
 
@@ -150,7 +187,15 @@ export function ResultsView({
 
 
   if (isLoading) {
-    return <LoadingState fileName={fileName} fileType={fileType} />;
+    return (
+      <LoadingState
+        fileName={fileName}
+        fileType={fileType}
+        fileSize={fileSize}
+        extractionMode={extractionMode}
+        progressData={progressData}
+      />
+    );
   }
 
   const isPdf = fileType === "application/pdf";
@@ -239,15 +284,29 @@ export function ResultsView({
             </CardHeader>
             <CardContent>
                 {pdfUrl ? (
-                  <iframe
-                    src={pdfUrl}
-                    className="w-full h-[600px] rounded-md border"
-                    title="Vista Previa del PDF Redactado"
-                  ></iframe>
+                  <div className="space-y-2">
+                    <iframe
+                      src={pdfUrl}
+                      className="w-full h-[600px] rounded-md border"
+                      title="Vista Previa del PDF Redactado"
+                      onError={(e) => {
+                        console.error("[PREVIEW] Error cargando iframe:", e);
+                      }}
+                      onLoad={() => {
+                        console.log("[PREVIEW] Iframe cargado exitosamente");
+                      }}
+                    ></iframe>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Si la vista previa no se muestra correctamente, descarga el archivo para verlo
+                    </p>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center p-8 bg-secondary rounded-lg text-center h-[600px]">
                      <FileDigit className="w-16 h-16 text-primary mb-4" />
                      <p className="text-lg font-medium">Generando vista previa del PDF...</p>
+                     <p className="text-sm text-muted-foreground mt-2">
+                       Esto puede tardar unos segundos
+                     </p>
                   </div>
                 )}
             </CardContent>

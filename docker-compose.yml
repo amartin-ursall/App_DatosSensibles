@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Backend - Flask/Python
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sensitive-data-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production
+      - PARSER_SERVICE_URL=${PARSER_SERVICE_URL:-http://host.docker.internal:1000}
+    volumes:
+      # Montar directorio temporal para PDFs procesados
+      - pdf-temp:/tmp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Frontend - Next.js
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sensitive-data-frontend
+    ports:
+      - "3030:3030"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      # URL publica del backend (desde el navegador)
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  pdf-temp:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

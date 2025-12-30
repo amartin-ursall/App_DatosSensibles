@@ -11,6 +11,10 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from pdf_processor import pdf_processor
 from detector import detector
+import fitz  # PyMuPDF para conversin de imgenes
+import time
+from threading import Lock
+from typing import Any, Dict, Optional
 
 app = Flask(__name__)
 # Permitir CORS para Next.js y exponer headers personalizados
@@ -18,16 +22,117 @@ CORS(app, expose_headers=['X-Total-Matches', 'X-Matches-By-Type', 'X-Pages-Proce
 
 # Configuración
 UPLOAD_FOLDER = tempfile.gettempdir()
-ALLOWED_EXTENSIONS = {'pdf', 'txt'}
+ALLOWED_EXTENSIONS = {'pdf', 'txt', 'jpg', 'jpeg', 'png'}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
+progress_lock = Lock()
+progress_state: Dict[str, Dict[str, Any]] = {}
+
+def _update_progress(progress_id: Optional[str], **updates):
+    """Actualiza el estado de progreso para un identificador dado."""
+    if not progress_id:
+        return
+    updates.setdefault('updatedAt', time.time())
+    with progress_lock:
+        state = progress_state.get(progress_id, {})
+        state.update(updates)
+        state['progressId'] = progress_id
+        progress_state[progress_id] = state
+
+def _get_progress(progress_id: str) -> Optional[Dict[str, Any]]:
+    with progress_lock:
+        state = progress_state.get(progress_id)
+        return dict(state) if state else None
+
+def _clear_progress(progress_id: Optional[str]) -> None:
+    if not progress_id:
+        return
+    with progress_lock:
+        progress_state.pop(progress_id, None)
+
+
 
 def allowed_file(filename):
     """Verifica si el archivo tiene extensión permitida"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def is_image(filename):
+    """Verifica si el archivo es una imagen"""
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    return ext in {'jpg', 'jpeg', 'png'}
+
+
+def convert_image_to_pdf(image_path, output_pdf_path):
+    """
+    Convierte una imagen a PDF
+
+    Args:
+        image_path: Ruta a la imagen
+        output_pdf_path: Ruta donde guardar el PDF
+
+    Returns:
+        True si la conversión fue exitosa, False en caso contrario
+    """
+    try:
+        print(f"[IMG→PDF] Convirtiendo imagen a PDF: {image_path}")
+
+        # Crear un nuevo documento PDF
+        doc = fitz.open()
+
+        # Abrir la imagen
+        img = fitz.open(image_path)
+
+        # Obtener el primer (y único) pixmap de la imagen
+        pix = fitz.Pixmap(image_path)
+
+        # Crear una página con el tamaño de la imagen
+        # Usar A4 como máximo, escalando si es necesario
+        img_width = pix.width
+        img_height = pix.height
+
+        # A4 size in points (595 x 842)
+        a4_width = 595
+        a4_height = 842
+
+        # Calcular escala para que quepa en A4 si es más grande
+        scale = min(a4_width / img_width, a4_height / img_height, 1.0)
+
+        page_width = img_width * scale
+        page_height = img_height * scale
+
+        # Crear página
+        page = doc.new_page(width=page_width, height=page_height)
+
+        # Insertar la imagen
+        rect = fitz.Rect(0, 0, page_width, page_height)
+        page.insert_image(rect, filename=image_path)
+
+        # Guardar el PDF
+        doc.save(output_pdf_path)
+        doc.close()
+        pix = None
+
+        print(f"[IMG→PDF] ✓ Conversión exitosa: {output_pdf_path}")
+        return True
+
+    except Exception as e:
+        print(f"[IMG→PDF] ✗ Error al convertir imagen: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+@app.route('/api/progress/<progress_id>', methods=['GET'])
+def get_progress_status(progress_id: str):
+    """Devuelve el estado de progreso asociado a un identificador."""
+    data = _get_progress(progress_id)
+    if not data:
+        return jsonify({'message': 'Progress not found'}), 404
+    return jsonify(data)
 
 
 @app.route('/health', methods=['GET'])
@@ -50,6 +155,7 @@ def process_pdf():
         - rules: JSON string con reglas habilitadas
         - sensitivityLevel: 'strict', 'normal', 'relaxed'
         - action: 'highlight' (default) o 'redact'
+        - extractionMode: 'auto', 'parser' o 'ocr'
 
     Response:
         - PDF procesado como archivo
@@ -75,6 +181,34 @@ def process_pdf():
         rules_json = request.form.get('rules', '{}')
         sensitivity_level = request.form.get('sensitivityLevel', 'normal')
         action = request.form.get('action', 'highlight')
+        extraction_mode = (request.form.get('extractionMode', 'auto') or 'auto').lower()
+        if extraction_mode not in {'parser', 'ocr', 'auto'}:
+            extraction_mode = 'auto'
+
+        progress_id = request.form.get('progressId')
+        progress_callback = None
+        if progress_id:
+            _update_progress(
+                progress_id,
+                stage='queued',
+                percent=0,
+                currentPage=0,
+                totalPages=0,
+                extractionMethod=extraction_mode,
+                done=False,
+            )
+
+            def _progress_callback(update: Dict[str, Any]):
+                data = dict(update) if update else {}
+                percent = data.get('percent')
+                if percent is not None:
+                    try:
+                        data['percent'] = max(0, min(99, int(percent)))
+                    except (ValueError, TypeError):
+                        data.pop('percent', None)
+                _update_progress(progress_id, **data)
+
+            progress_callback = _progress_callback
 
         # Parsear reglas
         try:
@@ -84,35 +218,73 @@ def process_pdf():
 
         # Guardar archivo temporal
         filename = secure_filename(file.filename)
-        input_path = os.path.join(app.config['UPLOAD_FOLDER'], f'input_{filename}')
+        original_input_path = os.path.join(app.config['UPLOAD_FOLDER'], f'input_{filename}')
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], f'output_{filename}')
 
-        file.save(input_path)
+        file.save(original_input_path)
+
+        if progress_id:
+            _update_progress(progress_id, stage='saved-input', percent=5, currentPage=0)
+
+        # Si es una imagen, convertirla a PDF primero
+        input_path = original_input_path
+        pdf_filename = filename
+
+        if is_image(filename):
+            print(f"[IMAGEN] Detectada imagen: {filename}")
+            pdf_filename = filename.rsplit('.', 1)[0] + '.pdf'
+            pdf_input_path = os.path.join(app.config['UPLOAD_FOLDER'], f'converted_{pdf_filename}')
+
+            if not convert_image_to_pdf(original_input_path, pdf_input_path):
+                return jsonify({'error': 'Error converting image to PDF'}), 500
+
+            input_path = pdf_input_path
+            output_path = os.path.join(app.config['UPLOAD_FOLDER'], f'output_{pdf_filename}')
+            print(f"[IMAGEN] ✓ Imagen convertida a PDF para procesamiento")
+
+            if progress_id:
+                _update_progress(progress_id, stage='image-converted', percent=8, currentPage=0)
 
         try:
-            # Procesar PDF
-            print(f"[PDF] Procesando: {filename}")
-            print(f"      Reglas: {sum(rules.values())} habilitadas")
-            print(f"      Sensibilidad: {sensitivity_level}")
-            print(f"      Accion: {action}")
+            # Procesar PDF (original o convertido desde imagen)
+            print(f"[PROCESO] Procesando: {pdf_filename}")
+            print(f"          Reglas: {sum(rules.values())} habilitadas")
+            print(f"          Sensibilidad: {sensitivity_level}")
+            print(f"          Accion: {action}")
+            print(f"          Modo extraccion: {extraction_mode}")
+
+            if progress_id:
+                _update_progress(progress_id, stage='starting-processing', percent=10, currentPage=0, extractionMethod=extraction_mode)
 
             stats = pdf_processor.process_pdf(
                 input_path,
                 output_path,
                 rules,
                 sensitivity_level,
-                action
+                action,
+                extraction_mode,
+                progress_callback=progress_callback
             )
 
             print(f"[OK] Procesado: {stats['total_matches']} deteccion(es)")
             print(f"[STATS] Por tipo: {stats['by_type']}")
+
+            if progress_id:
+                _update_progress(
+                    progress_id,
+                    stage='completed',
+                    percent=100,
+                    done=True,
+                    currentPage=stats.get('pages_processed'),
+                    totalPages=stats.get('pages_processed'),
+                )
 
             # Retornar PDF procesado
             response = send_file(
                 output_path,
                 mimetype='application/pdf',
                 as_attachment=True,
-                download_name=f'redacted_{filename}'
+                download_name=f'redacted_{pdf_filename}'
             )
 
             # Añadir headers con estadísticas
@@ -127,12 +299,19 @@ def process_pdf():
 
         finally:
             # Limpiar archivos temporales
-            if os.path.exists(input_path):
+            if os.path.exists(original_input_path):
+                os.remove(original_input_path)
+
+            # Si convertimos una imagen a PDF, limpiar el PDF temporal también
+            if is_image(filename) and input_path != original_input_path and os.path.exists(input_path):
                 os.remove(input_path)
+
             # No eliminar output_path aún, send_file lo necesita
 
     except Exception as e:
         print(f"[ERROR] Error procesando PDF: {str(e)}")
+        if progress_id:
+            _update_progress(progress_id, stage='error', percent=100, done=True, message=str(e))
         import traceback
         traceback.print_exc()
         return jsonify({

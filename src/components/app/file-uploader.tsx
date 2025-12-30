@@ -12,50 +12,64 @@ import { supportedFileTypes } from "@/lib/types";
 interface FileUploaderProps {
   onFileDrop: (file: File) => void;
   isLoading: boolean;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
-export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
+export function FileUploader({
+  onFileDrop,
+  isLoading,
+  disabled = false,
+  disabledMessage,
+}: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const isUploaderDisabled = isLoading || disabled;
 
   const handleFileSelect = (file: File | null) => {
-    if (file) {
-      // Simulate upload progress
-      setUploadProgress(0);
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 95) {
-            clearInterval(interval);
-            return prev;
-          }
-          return prev + 5;
-        });
-      }, 50);
-
-      onFileDrop(file);
+    if (isUploaderDisabled || !file) {
+      return;
     }
+
+    // Simulate upload progress
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 95) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 5;
+      });
+    }, 50);
+
+    onFileDrop(file);
   };
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isUploaderDisabled) return;
     setIsDragging(true);
   };
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isUploaderDisabled) return;
     setIsDragging(false);
   };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isUploaderDisabled) return;
   };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isUploaderDisabled) return;
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileSelect(e.dataTransfer.files[0]);
@@ -70,6 +84,7 @@ export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
   };
 
   const triggerFileInput = () => {
+    if (isUploaderDisabled) return;
     document.getElementById("file-input")?.click();
   };
 
@@ -79,7 +94,7 @@ export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
         className={cn(
           "transition-all duration-300",
           isDragging && "border-primary ring-2 ring-primary ring-offset-2",
-          isLoading && "pointer-events-none opacity-50"
+          isUploaderDisabled && "pointer-events-none opacity-50"
         )}
       >
         <CardContent
@@ -106,9 +121,14 @@ export function FileUploader({ onFileDrop, isLoading }: FileUploaderProps) {
               onChange={handleInputChange}
               accept={supportedFileTypes.join(",")}
             />
-            <Button onClick={triggerFileInput} disabled={isLoading}>
+            <Button onClick={triggerFileInput} disabled={isUploaderDisabled}>
               Buscar Archivos
             </Button>
+            {disabled && !isLoading && disabledMessage && (
+              <p className="text-sm text-muted-foreground mt-4">
+                {disabledMessage}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-4">
               Tipos de archivo soportados: .txt, .csv, .md, .json, .log, .pdf
             </p>
